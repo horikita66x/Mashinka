@@ -3,254 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стартовая страница</title>
+    <title>🚀 Космический дашборд</title>
     <style>
-        :root {
-            --bg: #0d0d16;
-            --glass: rgba(255,255,255,0.04);
-            --border: rgba(255,255,255,0.08);
-            --text: #e0e0ec;
-            --muted: #77778c;
-            --accent: #a78bfa;
-            --accent2: #60a5fa;
-        }
-
-        .light {
-            --bg: #f4f4f8;
-            --glass: rgba(0,0,0,0.03);
-            --border: rgba(0,0,0,0.08);
-            --text: #1a1a24;
-            --muted: #6b6b7b;
-            --accent: #7c3aed;
-            --accent2: #2563eb;
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(145deg, #0b2b3f 0%, #1b4a3b 40%, #2d6a4f 70%, #52b788 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.4s, color 0.4s;
             padding: 20px;
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.8s ease;
+        }
+
+        /* КОСМИЧЕСКИЙ РЕЖИМ (переключается кнопкой) */
+        body.space-mode {
+            background: linear-gradient(145deg, #0a0a1a 0%, #1a0a2e 40%, #2d1b4e 70%, #1a0a2e 100%) !important;
+        }
+
+        body.space-mode .container {
+            background: rgba(0, 0, 0, 0.55) !important;
+            border-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        body.space-mode .icon-circle {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        /* ЧАСТИЦЫ И ЗВЁЗДЫ */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ОБЛАКА (анимированные) */
+        .clouds {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0.15;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: floatCloud 25s infinite linear;
+        }
+
+        .cloud:nth-child(1) { width: 300px; height: 100px; top: 10%; left: -10%; animation-duration: 30s; }
+        .cloud:nth-child(2) { width: 400px; height: 120px; top: 30%; left: -20%; animation-duration: 35s; animation-delay: 5s; }
+        .cloud:nth-child(3) { width: 250px; height: 80px; top: 60%; left: -15%; animation-duration: 28s; animation-delay: 10s; }
+
+        @keyframes floatCloud {
+            0% { transform: translateX(-20%) scale(1); opacity: 0.3; }
+            50% { transform: translateX(120vw) scale(1.2); opacity: 0.6; }
+            100% { transform: translateX(-20%) scale(1); opacity: 0.3; }
         }
 
         .container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 30px 25px;
+            max-width: 750px;
             width: 100%;
-            max-width: 520px;
+            margin: 0 auto;
+            background: rgba(13, 17, 23, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.8s ease;
+            transition: all 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) rotate(-1deg); }
+            to { opacity: 1; transform: scale(1) rotate(0); }
+        }
+
+        /* ШАПКА */
+        .header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .emoji-big { font-size: 32px; animation: pulse 3s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) rotate(5deg); } }
+
+        .weather {
+            font-size: 14px;
+            background: rgba(255,255,255,0.06);
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.04);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(4px);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .weather:hover { background: rgba(255,255,255,0.1); }
+
+        .time-block { text-align: right; }
+        .time { font-size: 28px; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.4); letter-spacing: 1px; }
+        .date { font-size: 13px; color: rgba(255, 255, 255, 0.5); margin-top: 2px; }
+
+        /* СТАТИСТИКА */
+        .stats {
+            display: flex;
             gap: 20px;
-        }
-
-        .time-block { text-align: center; }
-
-        #clock {
-            font-size: 64px;
-            font-weight: 700;
-            letter-spacing: -2px;
-            line-height: 1;
-        }
-
-        #date {
-            color: var(--muted);
-            font-size: 16px;
-            margin-top: 6px;
-        }
-
-        #timezone {
-            color: var(--accent);
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0 16px;
             font-size: 12px;
-            font-weight: 600;
-            margin-top: 2px;
-            letter-spacing: 1px;
+            color: rgba(255,255,255,0.4);
+        }
+        .stats span { 
+            background: rgba(255,255,255,0.03); 
+            padding: 4px 14px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .stats .num { color: #52b788; font-weight: 700; font-size: 14px; }
+
+        /* ПОИСК */
+        .search-box {
+            margin: 14px 0 22px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .search-wrapper {
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 20px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.4s;
+        }
+        .search-box input::placeholder { color: rgba(255,255,255,0.25); }
+        .search-box input:focus {
+            border-color: rgba(82, 183, 136, 0.5);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(82, 183, 136, 0.08);
+        }
+
+        .search-box button {
+            padding: 14px 28px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, #2d6a4f, #52b788);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .search-box button:hover { transform: scale(1.05); box-shadow: 0 8px 30px rgba(82, 183, 136, 0.3); }
+
+        /* ВКЛАДКИ */
+        .tabs {
             display: flex;
             gap: 8px;
-            background: var(--glass);
-            backdrop-filter: blur(14px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
         }
-
-        .engine {
-            background: none;
-            border: none;
-            color: var(--muted);
-            padding: 12px 10px;
-            font-size: 13px;
+        .tabs span {
+            padding: 5px 18px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.4);
+            font-size: 12px;
             cursor: pointer;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: 0.2s;
-            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.02);
+            transition: 0.3s;
+            user-select: none;
+        }
+        .tabs span:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .tabs span.active {
+            background: rgba(82, 183, 136, 0.2);
+            color: #fff;
+            border-color: rgba(82, 183, 136, 0.2);
         }
 
-        .engine.active { background: var(--accent); color: white; }
-
-        #search-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-size: 16px;
-            padding: 12px 10px;
-            outline: none;
-            min-width: 0;
-        }
-
-        #search-input::placeholder { color: var(--muted); }
-
-        .links-grid {
+        /* СЕТКА ССЫЛОК (Drag-n-Drop) */
+        .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 14px;
+            margin-top: 8px;
         }
 
-        .link-item {
-            background: var(--glass);
-            backdrop-filter: blur(14px);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px 8px;
-            text-decoration: none;
-            color: var(--text);
-            text-align: center;
-            font-size: 13px;
-            font-weight: 500;
-            transition: 0.2s;
+        .grid-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            text-decoration: none;
+            color: #f0f6fc;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            cursor: grab;
+            padding: 6px 4px;
+            border-radius: 16px;
+            border: 2px solid transparent;
         }
 
-        .link-item:hover { border-color: var(--accent2); background: rgba(96,165,250,0.05); }
-        .link-item .emoji { font-size: 24px; }
+        .grid-item:active { cursor: grabbing; }
+        .grid-item.dragging { opacity: 0.3; transform: scale(0.9); }
+        .grid-item.drag-over { border-color: #52b788; background: rgba(82,183,136,0.05); }
 
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--glass);
-            backdrop-filter: blur(14px);
-            border: 1px solid var(--border);
-            color: var(--text);
+        .grid-item:hover {
+            transform: translateY(-6px) scale(1.04);
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+        }
+
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .grid-item:hover .icon-circle {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: rotate(2deg) scale(1.06);
+        }
+
+        .icon-label { font-size: 11px; opacity: 0.75; text-shadow: 0 2px 8px rgba(0,0,0,0.5); font-weight: 500; }
+
+        /* ЦИТАТА ДНЯ + ФАКТ */
+        .quote-block {
+            margin: 20px 0 12px;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            border-left: 3px solid #52b788;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+            line-height: 1.6;
+            transition: 0.4s;
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .quote-block .author { font-style: normal; font-weight: 600; color: #52b788; font-size: 13px; margin-top: 6px; }
+        .quote-block .fact { font-style: normal; font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+        /* МУЗЫКА */
+        .music-player {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 10px 0 12px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.03);
+            flex-wrap: wrap;
+        }
+        .music-player button {
+            background: none;
+            border: none;
+            color: #fff;
             font-size: 20px;
             cursor: pointer;
-            transition: 0.2s;
+            opacity: 0.5;
+            transition: 0.3s;
+            padding: 4px 10px;
+        }
+        .music-player button:hover { opacity: 1; transform: scale(1.1); }
+        .music-player .track-name { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 300; }
+
+        /* ПРОГРЕСС-БАР ДНЯ */
+        .day-progress {
+            margin: 10px 0 6px;
+            height: 3px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .day-progress .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2d6a4f, #52b788, #95d5b2);
+            border-radius: 10px;
+            transition: width 0.5s;
+            width: 0%;
         }
 
-        .theme-toggle:hover { border-color: var(--accent); }
+        /* ТАЙМЕР ДО ВЕЧЕРА */
+        .timer-block {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            font-size: 13px;
+            color: rgba(255,255,255,0.35);
+            margin: 6px 0 12px;
+        }
+        .timer-block .num { color: #fff; font-weight: 600; font-size: 18px; min-width: 30px; display: inline-block; }
+        .timer-block .label { font-size: 11px; color: rgba(255,255,255,0.2); }
 
-        @media (max-width: 480px) {
-            #clock { font-size: 46px; }
-            .links-grid { grid-template-columns: repeat(3, 1fr); }
-            .search-wrapper { flex-wrap: wrap; }
-            .engine { font-size: 12px; padding: 8px; }
+        /* ФУТЕР */
+        .footer {
+            margin-top: 20px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            padding-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .footer button {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.3s;
+        }
+        .footer button:hover { background: rgba(255,255,255,0.04); color: #fff; }
+
+        /* АДАПТИВ */
+        @media (max-width: 600px) {
+            .container { padding: 16px 12px; }
+            .grid { gap: 8px; }
+            .icon-circle { width: 48px; height: 48px; font-size: 22px; }
+            .time { font-size: 22px; }
+            .header { flex-direction: column; align-items: stretch; text-align: center; }
+            .time-block { text-align: center; }
+            .weather { justify-content: center; }
+            .search-box input { min-width: 120px; padding: 12px 16px; }
+            .stats { font-size: 10px; gap: 8px; }
+            .stats span { padding: 2px 10px; }
         }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" id="theme-btn" title="Сменить тему">🌓</button>
+    <!-- ОБЛАКА -->
+    <div class="clouds">
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+    </div>
+
+    <!-- ЧАСТИЦЫ -->
+    <canvas id="particles-canvas"></canvas>
 
     <div class="container">
 
-        <div class="time-block">
-            <div id="clock">00:00</div>
-            <div id="date">Загрузка...</div>
-            <div id="timezone">МСК (UTC+3)</div>
+        <!-- ШАПКА -->
+        <div class="header">
+            <div class="header-left">
+                <span class="emoji-big">🌿</span>
+                <div class="weather" id="weatherBlock" title="Кликни для обновления">☀️ 22°C</div>
+                <span style="font-size:14px; opacity:0.3;" id="visitCounter">👤 0</span>
+            </div>
+            <div class="time-block">
+                <div class="time" id="currentTime">23:02</div>
+                <div class="date" id="currentDate">пятница, 17 июля</div>
+            </div>
         </div>
 
-        <div class="search-wrapper">
-            <button class="engine active" data-engine="google">🌐 Google</button>
-            <button class="engine" data-engine="youtube">▶️ YouTube</button>
-            <button class="engine" data-engine="github">🐙 GitHub</button>
-            <input type="text" id="search-input" placeholder="Поиск..." autofocus>
+        <!-- СТАТИСТИКА -->
+        <div class="stats">
+            <span>📊 Сайтов: <span class="num" id="siteCount">12</span></span>
+            <span>⚡ Вкладок: <span class="num" id="tabCount">4</span></span>
+            <span>🔄 Обновлений: <span class="num" id="refreshCount">0</span></span>
         </div>
 
-        <div class="links-grid">
-            <a class="link-item" href="https://t.me/Horikita666" target="_blank">
-                <span class="emoji">✈️</span> Telegram
-            </a>
-            <a class="link-item" href="https://mail.google.com" target="_blank">
-                <span class="emoji">📧</span> Почта
-            </a>
-            <a class="link-item" href="https://github.com" target="_blank">
-                <span class="emoji">🐙</span> GitHub
-            </a>
-            <a class="link-item" href="https://youtube.com" target="_blank">
-                <span class="emoji">▶️</span> YouTube
-            </a>
-            <a class="link-item" href="https://chat.openai.com" target="_blank">
-                <span class="emoji">🤖</span> ChatGPT
-            </a>
-            <a class="link-item" href="https://news.ycombinator.com" target="_blank">
-                <span class="emoji">📰</span> HN
-            </a>
-            <a class="link-item" href="https://reddit.com" target="_blank">
-                <span class="emoji">💬</span> Reddit
-            </a>
-            <a class="link-item" href="https://figma.com" target="_blank">
-                <span class="emoji">🎨</span> Figma
-            </a>
+        <!-- ПОИСК -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск в Google или Яндекс..." />
+            <button id="searchBtn">Найти</button>
+            <button id="searchYandex" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">Яндекс</button>
+        </div>
+
+        <!-- ВКЛАДКИ -->
+        <div class="tabs" id="tabsContainer">
+            <span class="active" data-tab="fav">⭐ Избранное</span>
+            <span data-tab="work">💼 Работа</span>
+            <span data-tab="fun">🎮 Развлечения</span>
+            <span data-tab="study">📚 Учёба</span>
+        </div>
+
+        <!-- СЕТКА ССЫЛОК (Drag-n-Drop) -->
+        <div class="grid" id="gridContainer">
+            <!-- Заполняется JS -->
+        </div>
+
+        <!-- ЦИТАТА + ФАКТ -->
+        <div class="quote-block" id="quoteBlock">
+            <div id="quoteText">Загружаем мудрость...</div>
+            <div class="author" id="quoteAuthor">—</div>
+            <div class="fact" id="factText">💡 Нажми для нового факта</div>
+        </div>
+
+        <!-- МУЗЫКАЛЬНЫЙ ПЛЕЕР -->
+        <div class="music-player">
+            <button id="prevTrack">⏮</button>
+            <button id="playPause">▶️</button>
+            <button id="nextTrack">⏭</button>
+            <span class="track-name" id="trackName">🎵 Ambient Relax</span>
+            <span style="font-size:11px; opacity:0.2;" id="trackProgress">0:00 / 0:00</span>
+        </div>
+
+        <!-- ТАЙМЕР ДО ВЕЧЕРА -->
+        <div class="timer-block">
+            <span>⏳ До вечера:</span>
+            <span><span class="num" id="hoursLeft">0</span><span class="label">ч</span></span>
+            <span><span class="num" id="minutesLeft">0</span><span class="label">м</span></span>
+            <span><span class="num" id="secondsLeft">0</span><span class="label">с</span></span>
+        </div>
+
+        <!-- ПРОГРЕСС-БАР ДНЯ -->
+        <div class="day-progress"><div class="fill" id="dayProgressFill"></div></div>
+
+        <!-- ФУТЕР -->
+        <div class="footer">
+            <span>🌱 Вдохновение в каждом дне</span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button id="toggleSpace">🚀 Космос</button>
+                <button id="resetLinks">🔄 Сбросить ссылки</button>
+                <button id="newFact">🧠 Новый факт</button>
+            </div>
         </div>
 
     </div>
 
     <script>
-        function updateTime() {
-            const now = new Date();
-            const msk = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
-            document.getElementById('clock').textContent = 
-                msk.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('date').textContent = 
-                msk.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
-        }
-        updateTime();
-        setInterval(updateTime, 1000);
-
-        const engines = { 
-            google: 'https://www.google.com/search?q=', 
-            youtube: 'https://www.youtube.com/results?search_query=', 
-            github: 'https://github.com/search?q=' 
+        // ===================== ДАННЫЕ =====================
+        const linkData = {
+            fav: [
+                { name: 'Google', icon: '🌐', url: 'https://www.google.com/' },
+                { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com/' },
+                { name: 'GitHub', icon: '🐙', url: 'https://github.com/' },
+                { name: 'Telegram', icon: '✈️', url: 'https://web.telegram.org/' },
+                { name: 'Почта', icon: '📧', url: 'https://mail.google.com/' },
+                { name: 'ChatGPT', icon: '🤖', url: 'https://chat.openai.com/' },
+                { name: 'HN', icon: '📰', url: 'https://news.ycombinator.com/' },
+                { name: 'Reddit', icon: '💬', url: 'https://www.reddit.com/' },
+                { name: 'Figma', icon: '🎨', url: 'https://www.figma.com/' },
+                { name: 'X', icon: '🐦', url: 'https://x.com/' },
+                { name: 'Instagram', icon: '📸', url: 'https://www.instagram.com/' },
+                { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com/' }
+            ],
+            work: [
+                { name: 'Gmail', icon: '📧', url: 'https://mail.google.com/' },
+                { name: 'Google Drive', icon: '📁', url: 'https://drive.google.com/' },
+                { name: 'Docs', icon: '📄', url: 'https://docs.google.com/' },
+                { name: 'Calendar', icon: '📅', url: 'https://calendar.google.com/' },
+                { name: 'GitHub', icon: '🐙', url: 'https://github.com/' },
+                { name: 'Figma', icon: '🎨', url: 'https://www.figma.com/' },
+                { name: 'Slack', icon: '💬', url: 'https://slack.com/' },
+                { name: 'Zoom', icon: '📹', url: 'https://zoom.us/' }
+            ],
+            fun: [
+                { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com/' },
+                { name: 'Twitch', icon: '🎮', url: 'https://www.twitch.tv/' },
+                { name: 'Reddit', icon: '💬', url: 'https://www.reddit.com/' },
+                { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com/' },
+                { name: 'Netflix', icon: '🎬', url: 'https://www.netflix.com/' },
+                { name: 'Discord', icon: '🎧', url: 'https://discord.com/' },
+                { name: 'Steam', icon: '🕹️', url: 'https://store.steampowered.com/' },
+                { name: '9gag', icon: '😂', url: 'https://9gag.com/' }
+            ],
+            study: [
+                { name: 'Wikipedia', icon: '📚', url: 'https://www.wikipedia.org/' },
+                { name: 'Google Scholar', icon: '🎓', url: 'https://scholar.google.com/' },
+                { name: 'Coursera', icon: '📖', url: 'https://www.coursera.org/' },
+                { name: 'Duolingo', icon: '🗣️', url: 'https://www.duolingo.com/' },
+                { name: 'GitHub', icon: '🐙', url: 'https://github.com/' },
+                { name: 'Stack Overflow', icon: '💡', url: 'https://stackoverflow.com/' },
+                { name: 'Notion', icon: '📝', url: 'https://www.notion.so/' },
+                { name: 'Wolfram', icon: '🔢', url: 'https://www.wolframalpha.com/' }
+            ]
         };
-        let currentEngine = 'google';
 
-        document.querySelectorAll('.engine').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.engine').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentEngine = btn.dataset.engine;
-                document.getElementById('search-input').focus();
-            });
-        });
-
-        document.getElementById('search-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const query = encodeURIComponent(e.target.value.trim());
-                if (query) window.location.href = engines[currentEngine] + query;
-            }
-        });
-
-        const themeBtn = document.getElementById('theme-btn');
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light');
-            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-        });
-        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-    </script>
-
-</body>
-</html>
+        const quotes = [
+            { text: "Жизнь — это то, что с тобой происходит, по
