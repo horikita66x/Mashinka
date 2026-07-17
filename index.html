@@ -2,16 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>УЛИЧНЫЙ БИТ | HORIKITA666</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NIGHT DRIVE | HORIKITA666</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
             background: #0a0a1a;
             display: flex;
@@ -20,14 +14,14 @@
             min-height: 100vh;
             font-family: 'Courier New', monospace;
             touch-action: none;
+            overflow: hidden;
         }
         canvas {
             display: block;
             width: 100vmin;
             height: 100vmin;
-            max-width: 600px;
-            max-height: 600px;
-            background: #0f1123;
+            max-width: 500px;
+            max-height: 700px;
             border: 3px solid #a88aff;
             border-radius: 20px;
             box-shadow: 0 0 30px #a88aff44;
@@ -70,20 +64,9 @@
             text-align: center;
             padding: 20px;
         }
-        .overlay h1 {
-            font-size: 2.5rem;
-            color: #a88aff;
-            text-shadow: 0 0 12px #a88aff88;
-        }
-        .overlay p {
-            color: #ccc;
-            font-size: 1.1rem;
-            margin: 8px 0;
-        }
-        .overlay .score-final {
-            font-size: 2rem;
-            color: #ffd966;
-        }
+        .overlay h1 { font-size: 2.5rem; color: #a88aff; text-shadow: 0 0 12px #a88aff88; }
+        .overlay p { color: #ccc; font-size: 1.1rem; margin: 8px 0; }
+        .overlay .score-final { font-size: 2rem; color: #ffd966; }
         .btn {
             background: #a88aff;
             border: none;
@@ -97,12 +80,8 @@
             cursor: pointer;
             transition: 0.1s linear;
         }
-        .btn:active {
-            transform: scale(0.96);
-        }
-        .hidden {
-            display: none !important;
-        }
+        .btn:active { transform: scale(0.96); }
+        .hidden { display: none !important; }
         @media (max-width: 500px) {
             .ui { font-size: 0.7rem; padding: 0 8px; }
             .overlay h1 { font-size: 2rem; }
@@ -110,24 +89,22 @@
     </style>
 </head>
 <body>
-
-    <div class="ui" id="gameUI">
+    <div class="ui">
         <span>🏆 <span id="scoreDisplay">0</span></span>
         <span>⚡ <span id="speedDisplay">1</span>x</span>
         <span>🏅 BEST <span id="bestDisplay">0</span></span>
     </div>
-
     <canvas id="gameCanvas"></canvas>
 
     <div class="overlay" id="startOverlay">
-        <h1>🚗 УЛИЧНЫЙ БИТ</h1>
-        <p>тапай по левой / правой части экрана<br>чтобы перестраиваться</p>
-        <p style="font-size:0.8rem; color:#888;">избегай красных машин | собирай ⭐</p>
+        <h1>🚗 NIGHT DRIVE</h1>
+        <p>левая / правая половина экрана — перестроение</p>
+        <p style="font-size:0.8rem; color:#888;">избегай машин | собирай звёзды</p>
         <button class="btn" id="startBtn">▶️ СТАРТ</button>
     </div>
 
     <div class="overlay hidden" id="gameOverOverlay">
-        <h1>💥 КРЫШКА</h1>
+        <h1>💥 CRASH</h1>
         <p class="score-final" id="finalScore">0</p>
         <p id="bestMsg">🏅 рекорд: 0</p>
         <button class="btn" id="restartBtn">🔄 ЗАНОВО</button>
@@ -147,237 +124,208 @@
             const startBtn = document.getElementById('startBtn');
             const restartBtn = document.getElementById('restartBtn');
 
-            // -------------------- РАЗМЕРЫ --------------------
-            let W = 600, H = 600;
+            let W, H;
             function resizeCanvas() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 const size = Math.min(rect.width, rect.height, 600);
-                W = size;
-                H = size;
-                canvas.width = W;
-                canvas.height = H;
+                W = canvas.width = size;
+                H = canvas.height = size * 1.25;
+                canvas.style.height = H + 'px';
+                canvas.style.width = W + 'px';
             }
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // -------------------- ПЕРЕМЕННЫЕ ИГРЫ --------------------
-            let gameActive = false;
-            let score = 0;
-            let speed = 2;
-            let best = localStorage.getItem('streetBeatBest') ? parseInt(localStorage.getItem('streetBeatBest')) : 0;
+            // ======= ЗАГРУЗКА ТЕКСТУР =======
+            const textures = {
+                asphalt: new Image(),
+                grass: new Image(),
+                carRed: new Image(),
+                carBlue: new Image(),
+                carYellow: new Image(),
+                playerCar: new Image(),
+                star: new Image()
+            };
+            textures.asphalt.src = 'https://www.transparenttextures.com/patterns/asfalt-dark.png';
+            textures.grass.src = 'https://www.transparenttextures.com/patterns/dark-mosaic.png';
+            textures.carRed.src = 'https://cdn-icons-png.flaticon.com/512/741/741407.png';
+            textures.carBlue.src = 'https://cdn-icons-png.flaticon.com/512/741/741408.png';
+            textures.carYellow.src = 'https://cdn-icons-png.flaticon.com/512/741/741409.png';
+            textures.playerCar.src = 'https://cdn-icons-png.flaticon.com/512/3206/3206091.png';
+            textures.star.src = 'https://cdn-icons-png.flaticon.com/512/182/182866.png';
+
+            let texturesLoaded = 0;
+            const totalTextures = 7;
+            function checkTextures() {
+                texturesLoaded++;
+                if (texturesLoaded >= totalTextures) {
+                    document.getElementById('startBtn').textContent = '▶️ СТАРТ';
+                    document.getElementById('startBtn').disabled = false;
+                }
+            }
+            for (let key in textures) {
+                textures[key].onload = checkTextures;
+                textures[key].onerror = checkTextures;
+            }
+
+            // ======= ИГРОВЫЕ ПЕРЕМЕННЫЕ =======
+            let gameActive = false, gameOver = false;
+            let score = 0, speed = 2, best = localStorage.getItem('nightDriveBest') ? parseInt(localStorage.getItem('nightDriveBest')) : 0;
             bestSpan.innerText = best;
 
-            // Машина игрока
-            const player = {
-                x: W/2 - 30,
-                y: H - 100,
-                w: 50,
-                h: 70,
-                lane: 1, // 0 - лево, 1 - центр, 2 - право
-                targetX: W/2 - 30
-            };
+            const player = { x: W/2 - 30, y: H - 150, w: 60, h: 90, lane: 1, targetX: W/2 - 30 };
+            let obstacles = [], stars = [], rain = [], trees = [];
+            let roadOffset = 0, spawnCounter = 0;
+            for (let i=0; i<180; i++) rain.push({ x: Math.random()*W, y: Math.random()*H, len: 12+Math.random()*18, speed: 5+Math.random()*9 });
 
-            // Препятствия
-            let obstacles = [];
-            let stars = [];
-            let frame = 0;
-            let spawnCounter = 0;
-            let gameOver = false;
-
-            // -------------------- УПРАВЛЕНИЕ (тап по левой/правой половине) --------------------
+            // ======= УПРАВЛЕНИЕ =======
             function handleTap(e) {
                 if (!gameActive) return;
                 e.preventDefault();
                 const rect = canvas.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const canvasX = clientX - rect.left;
-                const half = rect.width / 2;
-                if (canvasX < half) {
-                    // левая половина → влево
-                    if (player.lane > 0) {
-                        player.lane--;
-                        player.targetX = player.lane * 180 + 50;
-                    }
+                if (canvasX < rect.width/2) {
+                    if (player.lane > 0) { player.lane--; player.targetX = player.lane * 180 + 50; }
                 } else {
-                    // правая половина → вправо
-                    if (player.lane < 2) {
-                        player.lane++;
-                        player.targetX = player.lane * 180 + 50;
-                    }
+                    if (player.lane < 2) { player.lane++; player.targetX = player.lane * 180 + 50; }
                 }
             }
-
             canvas.addEventListener('touchstart', handleTap);
             canvas.addEventListener('mousedown', handleTap);
 
-            // -------------------- СПАВН ПРЕПЯТСТВИЙ --------------------
+            // ======= СПАВН =======
             function spawnObstacle() {
                 const lane = Math.floor(Math.random() * 3);
                 const x = lane * 180 + 50;
-                obstacles.push({
-                    x: x,
-                    y: -80,
-                    w: 45,
-                    h: 65,
-                    lane: lane,
-                    color: '#cc3355'
-                });
+                const colors = [textures.carRed, textures.carBlue, textures.carYellow];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                obstacles.push({ x, y: -100, w: 50, h: 80, lane, img: color });
             }
 
             function spawnStar() {
                 const lane = Math.floor(Math.random() * 3);
                 const x = lane * 180 + 50;
-                stars.push({
-                    x: x + 18,
-                    y: -30,
-                    r: 16,
-                    lane: lane
-                });
+                stars.push({ x: x + 15, y: -30, r: 20 });
             }
 
-            // -------------------- ОБНОВЛЕНИЕ --------------------
+            // ======= ОБНОВЛЕНИЕ =======
             function update() {
                 if (!gameActive) return;
-                frame++;
-
-                // плавное движение машины
-                const dx = player.targetX - player.x;
-                player.x += dx * 0.12;
-
-                // скорость растёт
-                speed = 2 + Math.floor(score / 200) * 0.5;
-                if (speed > 8) speed = 8;
+                player.x += (player.targetX - player.x) * 0.12;
+                speed = 2 + Math.floor(score / 180) * 0.7;
+                if (speed > 10) speed = 10;
                 speedSpan.innerText = speed.toFixed(1);
-
-                // спавн препятствий (частота растёт со скоростью)
+                roadOffset = (roadOffset + speed) % 40;
                 spawnCounter++;
-                let spawnRate = Math.max(18, 45 - Math.floor(speed * 2));
+                let spawnRate = Math.max(15, 45 - Math.floor(speed * 3));
                 if (spawnCounter > spawnRate) {
                     spawnCounter = 0;
-                    if (Math.random() < 0.65) spawnObstacle();
-                    if (Math.random() < 0.4) spawnStar();
+                    if (Math.random() < 0.55) spawnObstacle();
+                    if (Math.random() < 0.3) spawnStar();
                 }
 
-                // двигаем препятствия
-                for (let i = obstacles.length - 1; i >= 0; i--) {
+                for (let i=obstacles.length-1; i>=0; i--) {
                     const o = obstacles[i];
                     o.y += speed;
-                    if (o.y > H + 50) {
-                        obstacles.splice(i, 1);
-                        continue;
-                    }
-                    // столкновение с игроком
-                    if (o.y + o.h > player.y && o.y < player.y + player.h &&
-                        o.x + o.w > player.x && o.x < player.x + player.w) {
-                        endGame();
-                        return;
+                    if (o.y > H + 60) { obstacles.splice(i,1); continue; }
+                    if (o.x + o.w > player.x && o.x < player.x + player.w &&
+                        o.y + o.h > player.y && o.y < player.y + player.h) {
+                        endGame(); return;
                     }
                 }
 
-                // двигаем звёзды
-                for (let i = stars.length - 1; i >= 0; i--) {
+                for (let i=stars.length-1; i>=0; i--) {
                     const s = stars[i];
                     s.y += speed;
-                    if (s.y > H + 50) {
-                        stars.splice(i, 1);
-                        continue;
-                    }
-                    // сбор звезды
-                    const dx = (player.x + player.w/2) - (s.x);
-                    const dy = (player.y + player.h/2) - (s.y);
+                    if (s.y > H + 60) { stars.splice(i,1); continue; }
+                    const dx = (player.x + player.w/2) - s.x;
+                    const dy = (player.y + player.h/2) - s.y;
                     if (Math.sqrt(dx*dx + dy*dy) < s.r + 25) {
-                        score += 10;
+                        score += 15;
                         scoreSpan.innerText = score;
-                        stars.splice(i, 1);
-                        if (score > best) {
-                            best = score;
-                            localStorage.setItem('streetBeatBest', best);
-                            bestSpan.innerText = best;
-                        }
-                        continue;
+                        stars.splice(i,1);
+                        if (score > best) { best = score; localStorage.setItem('nightDriveBest', best); bestSpan.innerText = best; }
                     }
                 }
 
-                // обновляем счёт (за расстояние)
-                score += 0.5;
+                score += 0.6;
                 scoreSpan.innerText = Math.floor(score);
                 if (Math.floor(score) > best) {
                     best = Math.floor(score);
-                    localStorage.setItem('streetBeatBest', best);
+                    localStorage.setItem('nightDriveBest', best);
                     bestSpan.innerText = best;
+                }
+
+                for (let r of rain) {
+                    r.y += r.speed;
+                    if (r.y > H) { r.y = -20; r.x = Math.random() * W; }
                 }
             }
 
-            // -------------------- ОТРИСОВКА --------------------
+            // ======= ОТРИСОВКА =======
             function draw() {
                 ctx.clearRect(0, 0, W, H);
-
-                // дорога
-                ctx.fillStyle = '#1a1d30';
+                ctx.fillStyle = '#0a0a1a';
                 ctx.fillRect(0, 0, W, H);
-                // разметка (полосы)
-                ctx.strokeStyle = '#3a4060';
-                ctx.lineWidth = 4;
-                for (let i = 0; i < 3; i++) {
-                    const x = i * 200 + 100;
+
+                // дорога с текстурой асфальта
+                const patAsphalt = ctx.createPattern(textures.asphalt, 'repeat');
+                ctx.fillStyle = patAsphalt;
+                ctx.beginPath();
+                ctx.moveTo(40, H);
+                ctx.lineTo(W/2 - 80, H * 0.45);
+                ctx.lineTo(W/2 + 80, H * 0.45);
+                ctx.lineTo(W-40, H);
+                ctx.closePath();
+                ctx.fill();
+
+                // трава (обочина)
+                const patGrass = ctx.createPattern(textures.grass, 'repeat');
+                ctx.fillStyle = patGrass;
+                ctx.fillRect(0, 0, 40, H);
+                ctx.fillRect(W-40, 0, 40, H);
+
+                // разметка
+                ctx.strokeStyle = '#ffcc44';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([25, 30]);
+                ctx.lineDashOffset = -roadOffset * 2;
+                for (let i = 1; i < 3; i++) {
+                    const x1 = 40 + i * (W-80)/3;
+                    const x2 = W/2 - 80 + i * 160/3;
                     ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, H);
-                    ctx.setLineDash([20, 25]);
+                    ctx.moveTo(x1, H);
+                    ctx.lineTo(x2, H * 0.45);
                     ctx.stroke();
                 }
                 ctx.setLineDash([]);
 
-                // разделители по бокам
-                ctx.fillStyle = '#2a2f4a';
-                ctx.fillRect(0, 0, 30, H);
-                ctx.fillRect(W-30, 0, 30, H);
-
-                // звёзды
+                // звёзды (текстура)
                 for (let s of stars) {
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = '#ffd966';
-                    ctx.beginPath();
-                    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-                    ctx.fillStyle = '#ffd966';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
+                    ctx.drawImage(textures.star, s.x - s.r, s.y - s.r, s.r*2, s.r*2);
                 }
 
                 // препятствия
                 for (let o of obstacles) {
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#ff3355';
-                    ctx.fillStyle = o.color;
-                    ctx.fillRect(o.x, o.y, o.w, o.h);
-                    // окна
-                    ctx.fillStyle = '#222244';
-                    ctx.fillRect(o.x+6, o.y+8, 10, 14);
-                    ctx.fillRect(o.x+o.w-16, o.y+8, 10, 14);
-                    ctx.shadowBlur = 0;
+                    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
                 }
 
-                // машина игрока (BMW стиль)
-                ctx.shadowBlur = 25;
-                ctx.shadowColor = '#a88aff88';
-                ctx.fillStyle = '#1a2a4a';
-                ctx.fillRect(player.x, player.y, player.w, player.h);
-                ctx.fillStyle = '#3a6a9a';
-                ctx.fillRect(player.x+4, player.y-6, 8, 14);
-                ctx.fillRect(player.x+player.w-12, player.y-6, 8, 14);
-                // фары
-                ctx.fillStyle = '#ffe066';
-                ctx.fillRect(player.x+4, player.y+player.h-6, 10, 6);
-                ctx.fillRect(player.x+player.w-14, player.y+player.h-6, 10, 6);
-                ctx.shadowBlur = 0;
+                // машина игрока
+                ctx.drawImage(textures.playerCar, player.x, player.y, player.w, player.h);
 
-                // очки на дороге
-                ctx.fillStyle = '#f0f0ff44';
-                ctx.font = '16px monospace';
-                ctx.fillText('HORIKITA666', W/2-70, H-20);
+                // дождь
+                ctx.strokeStyle = '#8aa8ff44';
+                ctx.lineWidth = 1.5;
+                for (let r of rain) {
+                    ctx.beginPath();
+                    ctx.moveTo(r.x, r.y);
+                    ctx.lineTo(r.x - 4, r.y + r.len);
+                    ctx.stroke();
+                }
             }
 
-            // -------------------- КОНЕЦ ИГРЫ --------------------
+            // ======= КОНЕЦ ИГРЫ =======
             function endGame() {
                 if (gameOver) return;
                 gameOver = true;
@@ -387,7 +335,7 @@
                 gameOverOverlay.classList.remove('hidden');
             }
 
-            // -------------------- СБРОС --------------------
+            // ======= СБРОС =======
             function resetGame() {
                 gameOver = false;
                 gameActive = true;
@@ -396,7 +344,7 @@
                 obstacles = [];
                 stars = [];
                 player.x = W/2 - 30;
-                player.y = H - 100;
+                player.y = H - 150;
                 player.lane = 1;
                 player.targetX = W/2 - 30;
                 spawnCounter = 0;
@@ -406,7 +354,7 @@
                 startOverlay.classList.add('hidden');
             }
 
-            // -------------------- СТАРТ --------------------
+            // ======= СТАРТ =======
             function startGame() {
                 resetGame();
                 gameActive = true;
@@ -415,25 +363,19 @@
             }
 
             startBtn.addEventListener('click', startGame);
-            restartBtn.addEventListener('click', () => {
-                resetGame();
-            });
+            restartBtn.addEventListener('click', resetGame);
 
-            // -------------------- ИГРОВОЙ ЦИКЛ --------------------
+            // ======= ЦИКЛ =======
             function gameLoop() {
                 update();
                 draw();
                 requestAnimationFrame(gameLoop);
             }
 
-            // Показываем стартовый экран
             startOverlay.classList.remove('hidden');
             gameActive = false;
             gameLoop();
-
-            // Политика автозапуска музыки на сайте — если есть, пусть играет сама
-            // В этой игре музыка не добавлена, чтобы не перегружать
         })();
     </script>
 </body>
-</html>
+        </html>
