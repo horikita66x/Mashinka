@@ -3,240 +3,600 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой дашборд</title>
+    <title>⚡ МЕГА ДАШБОРД ⚡</title>
     <style>
+        /* ===== ОСНОВНЫЕ СТИЛИ ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background: linear-gradient(145deg, #0b2b3f, #1b4a3b 40%, #2d6a4f 70%, #52b788);
-            font-family: system-ui, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            background: #0a0e17;
+            position: relative;
+            overflow-x: hidden;
         }
-        .container {
-            background: rgba(13,17,23,0.5);
-            backdrop-filter: blur(12px);
-            padding: 30px 25px;
-            border-radius: 32px;
-            max-width: 700px;
+
+        /* ===== ЖИРНЫЙ ФОН С КАРТИНКОЙ ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            background: 
+                /* Картинка природы (замени ссылку на свою) */
+                url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80') center/cover no-repeat,
+                /* Градиент поверх */
+                linear-gradient(145deg, rgba(10,14,23,0.3), rgba(10,14,23,0.5));
+            background-blend-mode: overlay;
+            animation: slowZoom 20s infinite alternate ease-in-out;
+        }
+
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* ===== НЕОНОВЫЕ ЧАСТИЦЫ НА ФОНЕ ===== */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-        .time { font-size: 28px; font-weight: 700; color: #fff; }
-        .date { font-size: 13px; color: rgba(255,255,255,0.5); }
-        .weather { background: rgba(255,255,255,0.06); padding: 6px 16px; border-radius: 30px; color: #fff; cursor: pointer; }
-        .search-box { display: flex; gap: 10px; margin: 14px 0 22px; flex-wrap: wrap; }
-        .search-box input { flex: 1; padding: 14px 20px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #fff; font-size: 15px; outline: none; min-width: 150px; }
-        .search-box input::placeholder { color: rgba(255,255,255,0.3); }
-        .search-box button { padding: 14px 24px; border-radius: 40px; border: none; background: linear-gradient(135deg, #2d6a4f, #52b788); color: #fff; font-weight: 600; cursor: pointer; }
-        .tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
-        .tabs span { padding: 5px 18px; border-radius: 20px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); font-size: 12px; cursor: pointer; }
-        .tabs span.active { background: rgba(82,183,136,0.2); color: #fff; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-        .grid-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #f0f6fc; font-size: 12px; cursor: grab; padding: 6px; border-radius: 16px; border: 2px solid transparent; }
-        .grid-item:hover { transform: translateY(-4px); }
-        .icon-circle { width: 60px; height: 60px; background: rgba(255,255,255,0.04); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 6px; }
-        .grid-item.drag-over { border-color: #52b788; background: rgba(82,183,136,0.05); }
-        .quote-block { margin: 20px 0 12px; padding: 16px 20px; background: rgba(255,255,255,0.03); border-radius: 20px; border-left: 3px solid #52b788; font-size: 14px; color: rgba(255,255,255,0.7); font-style: italic; }
-        .quote-block .author { font-style: normal; font-weight: 600; color: #52b788; margin-top: 6px; }
-        .footer { margin-top: 20px; font-size: 11px; color: rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.02); padding-top: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-        .footer button { background: none; border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 20px; cursor: pointer; font-size: 11px; }
-        .footer button:hover { background: rgba(255,255,255,0.04); color: #fff; }
-        .stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,0.4); margin: 8px 0 16px; }
-        .stats .num { color: #52b788; font-weight: 700; }
-        .timer-block { display: flex; gap: 12px; justify-content: center; font-size: 13px; color: rgba(255,255,255,0.35); margin: 6px 0 12px; }
-        .timer-block .num { color: #fff; font-weight: 600; font-size: 18px; min-width: 30px; display: inline-block; }
-        .day-progress { margin: 10px 0 6px; height: 3px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden; }
-        .day-progress .fill { height: 100%; background: linear-gradient(90deg, #2d6a4f, #52b788); border-radius: 10px; width: 0%; }
-        @media (max-width: 500px) { .grid { grid-template-columns: repeat(3, 1fr); } .icon-circle { width: 50px; height: 50px; font-size: 22px; } .time { font-size: 22px; } .header { flex-direction: column; text-align: center; } }
+
+        /* ===== ОСНОВНОЙ КОНТЕЙНЕР ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            width: 100%;
+            padding: 35px 30px;
+            background: rgba(10, 14, 23, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 
+                0 30px 80px rgba(0,0,0,0.8),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            animation: floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ===== ШАПКА ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 38px;
+            animation: logoPulse 2s infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .weather {
+            padding: 8px 20px;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .weather:hover {
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.04);
+            box-shadow: 0 0 30px rgba(82,183,136,0.1);
+        }
+
+        .time-block {
+            text-align: right;
+        }
+        .time {
+            font-size: 34px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(82,183,136,0.15);
+            letter-spacing: 1px;
+        }
+        .date {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+        }
+
+        /* ===== СТАТИСТИКА (жирная) ===== */
+        .stats {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0 20px;
+        }
+        .stats .stat-item {
+            background: rgba(255,255,255,0.02);
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.35);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+        .stats .stat-item:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(82,183,136,0.1);
+        }
+        .stats .num {
+            color: #52b788;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* ===== ПОИСК (жирный) ===== */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0 24px;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 180px;
+            padding: 16px 24px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.03);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.4s;
+            backdrop-filter: blur(4px);
+        }
+        .search-box input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+        .search-box input:focus {
+            border-color: rgba(82,183,136,0.3);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 40px rgba(82,183,136,0.04);
+        }
+        .search-box button {
+            padding: 16px 32px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #2d6a4f, #52b788);
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .search-box button:hover {
+            transform: scale(1.04);
+            box-shadow: 0 8px 40px rgba(82,183,136,0.25);
+        }
+        .search-box .btn-yandex {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        /* ===== ВКЛАДКИ (жирные) ===== */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+        .tabs span {
+            padding: 8px 22px;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.02);
+            transition: all 0.3s;
+            user-select: none;
+            backdrop-filter: blur(4px);
+        }
+        .tabs span:hover {
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.6);
+        }
+        .tabs span.active {
+            background: rgba(82,183,136,0.15);
+            color: #fff;
+            border-color: rgba(82,183,136,0.15);
+            box-shadow: 0 0 30px rgba(82,183,136,0.03);
+        }
+
+        /* ===== СЕТКА ССЫЛОК (жирная) ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 10px 0 20px;
+        }
+
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 14px 8px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+        .grid-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(82,183,136,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        .icon-circle {
+            width: 68px;
+            height: 68px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 8px;
+            transition: all 0.4s;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .grid-item:hover .icon-circle {
+            background: rgba(82,183,136,0.05);
+            border-color: rgba(82,183,136,0.1);
+            transform: rotate(3deg) scale(1.05);
+            box-shadow: 0 0 40px rgba(82,183,136,0.04);
+        }
+
+        /* ===== БЛОКИ (жирные) ===== */
+        .row-blocks {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 18px 0 14px;
+        }
+
+        .block {
+            padding: 18px 20px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.02);
+            transition: all 0.3s;
+        }
+        .block:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.03);
+        }
+        .block-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.15);
+            margin-bottom: 8px;
+        }
+
+        /* Цитата */
+        .quote-text {
+            font-size: 15px;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+            line-height: 1.6;
+        }
+        .quote-author {
+            font-style: normal;
+            font-weight: 600;
+            color: #52b788;
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        /* Список дел */
+        .todo-list {
+            list-style: none;
+            text-align: left;
+        }
+        .todo-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .todo-list li:hover {
+            color: rgba(255,255,255,0.8);
+        }
+        .todo-list li.done {
+            text-decoration: line-through;
+            color: rgba(255,255,255,0.15);
+        }
+        .todo-list li .check {
+            font-size: 16px;
+            opacity: 0.3;
+            transition: 0.3s;
+        }
+        .todo-list li.done .check {
+            opacity: 1;
+            color: #52b788;
+        }
+        .todo-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .todo-input input {
+            flex: 1;
+            padding: 8px 14px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+        .todo-input input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+        .todo-input button {
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(82,183,136,0.2);
+            color: #52b788;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .todo-input button:hover {
+            background: rgba(82,183,136,0.3);
+        }
+
+        /* ===== ПРОГРЕСС-БАР ===== */
+        .progress-block {
+            margin: 10px 0 16px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: rgba(255,255,255,0.15);
+            margin-bottom: 4px;
+        }
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2d6a4f, #52b788, #95d5b2);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* ===== ФУТЕР (жирный) ===== */
+        .footer {
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .footer-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.1);
+            letter-spacing: 1px;
+        }
+        .footer button {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.15);
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.3s;
+        }
+        .footer button:hover {
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px; }
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .icon-circle { width: 56px; height: 56px; font-size: 26px; }
+            .time { font-size: 26px; }
+            .row-blocks { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: stretch; text-align: center; }
+            .time-block { text-align: center; }
+            .header-left { justify-content: center; }
+        }
+
+        @media (max-width: 450px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .icon-circle { width: 48px; height: 48px; font-size: 22px; }
+            .search-box input { min-width: 120px; padding: 14px 18px; }
+            .search-box button { padding: 14px 20px; font-size: 13px; }
+        }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <div class="header">
-        <div><span style="font-size:28px;">🌿</span> <span class="weather" id="weatherBlock">☀️ 22°C</span></div>
-        <div><div class="time" id="currentTime">23:02</div><div class="date" id="currentDate">пятница, 17 июля</div></div>
+    <!-- ===== ЧАСТИЦЫ (Canvas) ===== -->
+    <canvas id="particles-canvas"></canvas>
+
+    <div class="container">
+
+        <!-- ===== ШАПКА ===== -->
+        <div class="header">
+            <div class="header-left">
+                <span class="logo">🌿</span>
+                <div class="weather" id="weatherBlock">☀️ 22°C</div>
+                <div style="font-size:14px; color:rgba(255,255,255,0.1);">👤 <span id="visitCounter">0</span></div>
+            </div>
+            <div class="time-block">
+                <div class="time" id="currentTime">23:02</div>
+                <div class="date" id="currentDate">пятница, 17 июля</div>
+            </div>
+        </div>
+
+        <!-- ===== СТАТИСТИКА ===== -->
+        <div class="stats">
+            <span class="stat-item">📊 <span class="num" id="siteCount">12</span> сайтов</span>
+            <span class="stat-item">📁 <span class="num" id="tabCount">4</span> вкладки</span>
+            <span class="stat-item">🔄 <span class="num" id="refreshCount">0</span> обновлений</span>
+            <span class="stat-item">⏳ <span class="num" id="timerDisplay">--:--</span> до вечера</span>
+        </div>
+
+        <!-- ===== ПОИСК ===== -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск в Google..." />
+            <button id="searchBtn">Найти</button>
+            <button class="btn-yandex" id="searchYandex">Яндекс</button>
+        </div>
+
+        <!-- ===== ВКЛАДКИ ===== -->
+        <div class="tabs" id="tabsContainer">
+            <span class="active" data-tab="fav">⭐ Избранное</span>
+            <span data-tab="work">💼 Работа</span>
+            <span data-tab="fun">🎮 Игры</span>
+            <span data-tab="study">📚 Учёба</span>
+        </div>
+
+        <!-- ===== СЕТКА ССЫЛОК ===== -->
+        <div class="grid" id="gridContainer"></div>
+
+        <!-- ===== ДВА БЛОКА РЯДОМ ===== -->
+        <div class="row-blocks">
+            <!-- Цитата -->
+            <div class="block">
+                <div class="block-title">📜 Цитата дня</div>
+                <div class="quote-text" id="quoteText">Загружаем мудрость...</div>
+                <div class="quote-author" id="quoteAuthor">—</div>
+            </div>
+            <!-- Список дел -->
+            <div class="block">
+                <div class="block-title">✅ Список дел</div>
+                <ul class="todo-list" id="todoList">
+                    <li class="done"><span class="check">✅</span> Сделать дашборд</li>
+                    <li><span class="check">⬜</span> Выпить кофе</li>
+                    <li><span class="check">⬜</span> Погулять</li>
+                </ul>
+                <div class="todo-input">
+                    <input type="text" id="todoInput" placeholder="Новая задача..." />
+                    <button id="todoAdd">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ПРОГРЕСС-БАР ДНЯ ===== -->
+        <div class="progress-block">
+            <div class="progress-label">
+                <span>📈 Прогресс дня</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="fill" id="dayProgressFill"></div>
+            </div>
+        </div>
+
+        <!-- ===== ФУТЕР ===== -->
+        <div class="footer">
+            <span class="footer-text">🌱 Вдохновение в каждом дне</span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button id="newQuoteBtn">📜 Новая цитата</button>
+                <button id="clearDoneBtn">🗑️ Очистить готовые</button>
+            </div>
+        </div>
+
     </div>
 
-    <div class="stats">
-        <span>📊 Сайтов: <span class="num" id="siteCount">12</span></span>
-        <span>👤 Посетителей: <span class="num" id="visitCounter">0</span></span>
-    </div>
-
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 Поиск..." />
-        <button id="searchBtn">Найти</button>
-    </div>
-
-    <div class="tabs" id="tabsContainer">
-        <span class="active" data-tab="fav">⭐ Избранное</span>
-        <span data-tab="work">💼 Работа</span>
-        <span data-tab="fun">🎮 Игры</span>
-        <span data-tab="study">📚 Учёба</span>
-    </div>
-
-    <div class="grid" id="gridContainer"></div>
-
-    <div class="quote-block" id="quoteBlock">
-        <div id="quoteText">Загружаем...</div>
-        <div class="author" id="quoteAuthor">—</div>
-    </div>
-
-    <div class="timer-block">
-        <span>⏳ До вечера:</span>
-        <span><span class="num" id="hoursLeft">00</span>ч</span>
-        <span><span class="num" id="minutesLeft">00</span>м</span>
-        <span><span class="num" id="secondsLeft">00</span>с</span>
-    </div>
-
-    <div class="day-progress"><div class="fill" id="dayProgressFill"></div></div>
-
-    <div class="footer">
-        <span>🌱 Вдохновение</span>
-        <div><button id="newQuote">📜 Цитата</button></div>
-    </div>
-</div>
-
-<script>
-// ДАННЫЕ
-const linkData = {
-    fav: [
-        { name: 'Google', icon: '🌐', url: 'https://www.google.com/' },
-        { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com/' },
-        { name: 'GitHub', icon: '🐙', url: 'https://github.com/' },
-        { name: 'Telegram', icon: '✈️', url: 'https://web.telegram.org/' },
-        { name: 'Почта', icon: '📧', url: 'https://mail.google.com/' },
-        { name: 'ChatGPT', icon: '🤖', url: 'https://chat.openai.com/' },
-        { name: 'Reddit', icon: '💬', url: 'https://www.reddit.com/' },
-        { name: 'Figma', icon: '🎨', url: 'https://www.figma.com/' }
-    ],
-    work: [
-        { name: 'Gmail', icon: '📧', url: 'https://mail.google.com/' },
-        { name: 'Drive', icon: '📁', url: 'https://drive.google.com/' },
-        { name: 'Docs', icon: '📄', url: 'https://docs.google.com/' },
-        { name: 'GitHub', icon: '🐙', url: 'https://github.com/' }
-    ],
-    fun: [
-        { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com/' },
-        { name: 'Twitch', icon: '🎮', url: 'https://www.twitch.tv/' },
-        { name: 'Reddit', icon: '💬', url: 'https://www.reddit.com/' },
-        { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com/' }
-    ],
-    study: [
-        { name: 'Wikipedia', icon: '📚', url: 'https://www.wikipedia.org/' },
-        { name: 'Scholar', icon: '🎓', url: 'https://scholar.google.com/' },
-        { name: 'Coursera', icon: '📖', url: 'https://www.coursera.org/' },
-        { name: 'GitHub', icon: '🐙', url: 'https://github.com/' }
-    ]
-};
-
-const quotes = [
-    { text: "Жизнь — это то, что с тобой происходит, пока ты строишь планы.", author: "Джон Леннон" },
-    { text: "Не бойся делать то, что не умеешь. Ковчег построил любитель.", author: "Неизвестный" },
-    { text: "Будущее принадлежит тем, кто верит в красоту своей мечты.", author: "Элеонора Рузвельт" }
-];
-
-let currentTab = 'fav';
-let visitCount = parseInt(localStorage.getItem('visitCount') || '0');
-
-// РЕНДЕР СЕТКИ
-function renderGrid(tab) {
-    const grid = document.getElementById('gridContainer');
-    const items = linkData[tab] || linkData.fav;
-    grid.innerHTML = '';
-    items.forEach(item => {
-        const a = document.createElement('a');
-        a.className = 'grid-item';
-        a.href = item.url;
-        a.target = '_blank';
-        a.innerHTML = `<div class="icon-circle">${item.icon}</div><span>${item.name}</span>`;
-        grid.appendChild(a);
-    });
-    document.getElementById('siteCount').textContent = items.length;
-}
-
-// ВРЕМЯ
-function updateTime() {
-    const now = new Date();
-    document.getElementById('currentTime').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
-    document.getElementById('currentDate').textContent = now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Moscow' });
-}
-
-// ТАЙМЕР ДО ВЕЧЕРА
-function updateTimer() {
-    const now = new Date();
-    const evening = new Date(); evening.setHours(18,0,0,0);
-    if (now > evening) evening.setDate(evening.getDate() + 1);
-    const diff = Math.floor((evening - now) / 1000);
-    document.getElementById('hoursLeft').textContent = String(Math.floor(diff/3600)).padStart(2,'0');
-    document.getElementById('minutesLeft').textContent = String(Math.floor((diff%3600)/60)).padStart(2,'0');
-    document.getElementById('secondsLeft').textContent = String(diff%60).padStart(2,'0');
-}
-
-// ПРОГРЕСС ДНЯ
-function updateDayProgress() {
-    const now = new Date();
-    const start = new Date(); start.setHours(0,0,0,0);
-    const end = new Date(); end.setHours(24,0,0,0);
-    document.getElementById('dayProgressFill').style.width = ((now - start) / (end - start) * 100) + '%';
-}
-
-// ЦИТАТА
-function loadQuote() {
-    const q = quotes[Math.floor(Math.random() * quotes.length)];
-    document.getElementById('quoteText').textContent = `"${q.text}"`;
-    document.getElementById('quoteAuthor').textContent = `— ${q.author}`;
-}
-
-// ПОГОДА
-function updateWeather() {
-    const icons = ['☀️','⛅','☁️','🌧️'];
-    const temps = [18,22,25,28];
-    document.getElementById('weatherBlock').textContent = icons[Math.floor(Math.random()*icons.length)] + ' ' + temps[Math.floor(Math.random()*temps.length)] + '°C';
-}
-
-// ПОИСК
-document.getElementById('searchBtn').addEventListener('click', () => {
-    const q = document.getElementById('searchInput').value.trim();
-    if (q) window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank');
-});
-document.getElementById('searchInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') document.getElementById('searchBtn').click(); });
-
-// ВКЛАДКИ
-document.querySelectorAll('.tabs span').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.tabs span').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        currentTab = this.dataset.tab;
-        renderGrid(currentTab);
-    });
-});
-
-// НОВАЯ ЦИТАТА
-document.getElementById('newQuote').addEventListener('click', loadQuote);
-
-// ПОГОДА ПО КЛИКУ
-document.getElementById('weatherBlock').addEventListener('click', updateWeather);
-
-// СЧЁТЧИК ПОСЕТИТЕЛЕЙ
-visitCount++;
-localStorage.setItem('visitCount', visitCount);
-document.getElementById('visitCounter').textContent = visitCount;
-
-// ЗАПУСК
-renderGrid('fav');
-updateTime();
-setInterval(updateTime, 10000);
-updateTimer();
-setInterval(updateTimer, 1000);
-updateDayProgress();
-setInterval(updateDayProgress, 60000);
-loadQuote();
-</script>
-</body>
-</html>
+    <script>
+        // ============================================================
+        //  ДАННЫЕ
+        // ============================================================
+        const linkData = {
+            fav: [
+                { name: 'Google', icon: '🌐', url: 'https://www.google.com/' },
+                { name: 'YouTube', icon: '▶️', url: 'https://www.youtube.com/' },
+                { name: 'GitHub', icon: '🐙', url: 'https://github.com/' },
+                { name: 'Telegram', icon: '✈️', url: 'https://web.telegram.org/' },
+                { name: 'Почта', icon: '📧', url: 'https://mail.google.com/' },
+                { name: 'ChatGPT', icon: '🤖', url: 'https://chat.openai.com/' },
+                { name: 'Reddit', icon: '💬', url: 'https://www.reddit.com/' },
+                { name: 'Figma', icon: '🎨', url: 'https://www.figma.com/' },
+                { name: 'X', icon: '🐦', url: 'https://x.com/' },
+                { name: 'Spotify', icon: '🎵', url: 'https://open.spotify.com/' },
+                { name: 'Instagram', icon: '📸', url: 'https://www.instagram.com/' },
+                { name: 'Twitch', icon: '🎮', url: 'https://www.twitch.tv/' }
+            ],
+            work: [
+                { name: 'Gmail', icon: '📧', url: 'https://mail.google.com/' },
+                { name: 'Drive', icon: '📁', url: 'https://drive.google.com/' },
+                { name: 'Docs', icon: '📄', url: 'https://docs.google.com/' },
+                { name: 'Calendar', icon: '📅', url: 'https://calendar.google.com/' },
+                { 
