@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>УЛИЧНЫЙ БИТ | HORIKITA666</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #0a0a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            width: 100vmin;
+            height: 100vmin;
+            max-width: 600px;
+            max-height: 600px;
+            background: #0f1123;
+            border: 3px solid #a88aff;
+            border-radius: 20px;
+            box-shadow: 0 0 30px #a88aff44;
+            touch-action: none;
+        }
+        .ui {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 16px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .ui span {
+            background: #00000088;
+            padding: 4px 12px;
+            border-radius: 30px;
+            backdrop-filter: blur(6px);
+            border: 1px solid #a88aff55;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000bb;
+            backdrop-filter: blur(6px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+        .overlay h1 {
+            font-size: 2.5rem;
+            color: #a88aff;
+            text-shadow: 0 0 12px #a88aff88;
+        }
+        .overlay p {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin: 8px 0;
+        }
+        .overlay .score-final {
+            font-size: 2rem;
+            color: #ffd966;
+        }
+        .btn {
+            background: #a88aff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            color: #0a0a1a;
+            margin-top: 16px;
+            cursor: pointer;
+            transition: 0.1s linear;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .hidden {
+            display: none !important;
+        }
+        @media (max-width: 500px) {
+            .ui { font-size: 0.7rem; padding: 0 8px; }
+            .overlay h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui" id="gameUI">
+        <span>🏆 <span id="scoreDisplay">0</span></span>
+        <span>⚡ <span id="speedDisplay">1</span>x</span>
+        <span>🏅 BEST <span id="bestDisplay">0</span></span>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="overlay" id="startOverlay">
+        <h1>🚗 УЛИЧНЫЙ БИТ</h1>
+        <p>тапай по левой / правой части экрана<br>чтобы перестраиваться</p>
+        <p style="font-size:0.8rem; color:#888;">избегай красных машин | собирай ⭐</p>
+        <button class="btn" id="startBtn">▶️ СТАРТ</button>
+    </div>
+
+    <div class="overlay hidden" id="gameOverOverlay">
+        <h1>💥 КРЫШКА</h1>
+        <p class="score-final" id="finalScore">0</p>
+        <p id="bestMsg">🏅 рекорд: 0</p>
+        <button class="btn" id="restartBtn">🔄 ЗАНОВО</button>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('scoreDisplay');
+            const speedSpan = document.getElementById('speedDisplay');
+            const bestSpan = document.getElementById('bestDisplay');
+            const finalScoreSpan = document.getElementById('finalScore');
+            const bestMsgSpan = document.getElementById('bestMsg');
+            const startOverlay = document.getElementById('startOverlay');
+            const gameOverOverlay = document.getElementById('gameOverOverlay');
+            const startBtn = document.getElementById('startBtn');
+            const restartBtn = document.getElementById('restartBtn');
+
+            // -------------------- РАЗМЕРЫ --------------------
+            let W = 600, H = 600;
+            function resizeCanvas() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const size = Math.min(rect.width, rect.height, 600);
+                W = size;
+                H = size;
+                canvas.width = W;
+                canvas.height = H;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // -------------------- ПЕРЕМЕННЫЕ ИГРЫ --------------------
+            let gameActive = false;
+            let score = 0;
+            let speed = 2;
+            let best = localStorage.getItem('streetBeatBest') ? parseInt(localStorage.getItem('streetBeatBest')) : 0;
+            bestSpan.innerText = best;
+
+            // Машина игрока
+            const player = {
+                x: W/2 - 30,
+                y: H - 100,
+                w: 50,
+                h: 70,
+                lane: 1, // 0 - лево, 1 - центр, 2 - право
+                targetX: W/2 - 30
+            };
+
+            // Препятствия
+            let obstacles = [];
+            let stars = [];
+            let frame = 0;
+            let spawnCounter = 0;
+            let gameOver = false;
+
+            // -------------------- УПРАВЛЕНИЕ (тап по левой/правой половине) --------------------
+            function handleTap(e) {
+                if (!gameActive) return;
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const canvasX = clientX - rect.left;
+                const half = rect.width / 2;
+                if (canvasX < half) {
+                    // левая половина → влево
+                    if (player.lane > 0) {
+                        player.lane--;
+                        player.targetX = player.lane * 180 + 50;
+                    }
+                } else {
+                    // правая половина → вправо
+                    if (player.lane < 2) {
+                        player.lane++;
+                        player.targetX = player.lane * 180 + 50;
+                    }
+                }
+            }
+
+            canvas.addEventListener('touchstart', handleTap);
+            canvas.addEventListener('mousedown', handleTap);
+
+            // -------------------- СПАВН ПРЕПЯТСТВИЙ --------------------
+            function spawnObstacle() {
+                const lane = Math.floor(Math.random() * 3);
+                const x = lane * 180 + 50;
+                obstacles.push({
+                    x: x,
+                    y: -80,
+                    w: 45,
+                    h: 65,
+                    lane: lane,
+                    color: '#cc3355'
+                });
+            }
+
+            function spawnStar() {
+                const lane = Math.floor(Math.random() * 3);
+                const x = lane * 180 + 50;
+                stars.push({
+                    x: x + 18,
+                    y: -30,
+                    r: 16,
+                    lane: lane
+                });
+            }
+
+            // -------------------- ОБНОВЛЕНИЕ --------------------
+            function update() {
+                if (!gameActive) return;
+                frame++;
+
+                // плавное движение машины
+                const dx = player.targetX - player.x;
+                player.x += dx * 0.12;
+
+                // скорость растёт
+                speed = 2 + Math.floor(score / 200) * 0.5;
+                if (speed > 8) speed = 8;
+                speedSpan.innerText = speed.toFixed(1);
+
+                // спавн препятствий (частота растёт со скоростью)
+                spawnCounter++;
+                let spawnRate = Math.max(18, 45 - Math.floor(speed * 2));
+                if (spawnCounter > spawnRate) {
+                    spawnCounter = 0;
+                    if (Math.random() < 0.65) spawnObstacle();
+                    if (Math.random() < 0.4) spawnStar();
+                }
+
+                // двигаем препятствия
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    const o = obstacles[i];
+                    o.y += speed;
+                    if (o.y > H + 50) {
+                        obstacles.splice(i, 1);
+                        continue;
+                    }
+                    // столкновение с игроком
+                    if (o.y + o.h > player.y && o.y < player.y + player.h &&
+                        o.x + o.w > player.x && o.x < player.x + player.w) {
+                        endGame();
+                        return;
+                    }
+                }
+
+                // двигаем звёзды
+                for (let i = stars.length - 1; i >= 0; i--) {
+                    const s = stars[i];
+                    s.y += speed;
+                    if (s.y > H + 50) {
+                        stars.splice(i, 1);
+                        continue;
+                    }
+                    // сбор звезды
+                    const dx = (player.x + player.w/2) - (s.x);
+                    const dy = (player.y + player.h/2) - (s.y);
+                    if (Math.sqrt(dx*dx + dy*dy) < s.r + 25) {
+                        score += 10;
+                        scoreSpan.innerText = score;
+                        stars.splice(i, 1);
+                        if (score > best) {
+                            best = score;
+                            localStorage.setItem('streetBeatBest', best);
+                            bestSpan.innerText = best;
+                        }
+                        continue;
+                    }
+                }
+
+                // обновляем счёт (за расстояние)
+                score += 0.5;
+                scoreSpan.innerText = Math.floor(score);
+                if (Math.floor(score) > best) {
+                    best = Math.floor(score);
+                    localStorage.setItem('streetBeatBest', best);
+                    bestSpan.innerText = best;
+                }
+            }
+
+            // -------------------- ОТРИСОВКА --------------------
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+
+                // дорога
+                ctx.fillStyle = '#1a1d30';
+                ctx.fillRect(0, 0, W, H);
+                // разметка (полосы)
+                ctx.strokeStyle = '#3a4060';
+                ctx.lineWidth = 4;
+                for (let i = 0; i < 3; i++) {
+                    const x = i * 200 + 100;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, H);
+                    ctx.setLineDash([20, 25]);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+
+                // разделители по бокам
+                ctx.fillStyle = '#2a2f4a';
+                ctx.fillRect(0, 0, 30, H);
+                ctx.fillRect(W-30, 0, 30, H);
+
+                // звёзды
+                for (let s of stars) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffd966';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                    ctx.fillStyle = '#ffd966';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // препятствия
+                for (let o of obstacles) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff3355';
+                    ctx.fillStyle = o.color;
+                    ctx.fillRect(o.x, o.y, o.w, o.h);
+                    // окна
+                    ctx.fillStyle = '#222244';
+                    ctx.fillRect(o.x+6, o.y+8, 10, 14);
+                    ctx.fillRect(o.x+o.w-16, o.y+8, 10, 14);
+                    ctx.shadowBlur = 0;
+                }
+
+                // машина игрока (BMW стиль)
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#a88aff88';
+                ctx.fillStyle = '#1a2a4a';
+                ctx.fillRect(player.x, player.y, player.w, player.h);
+                ctx.fillStyle = '#3a6a9a';
+                ctx.fillRect(player.x+4, player.y-6, 8, 14);
+                ctx.fillRect(player.x+player.w-12, player.y-6, 8, 14);
+                // фары
+                ctx.fillStyle = '#ffe066';
+                ctx.fillRect(player.x+4, player.y+player.h-6, 10, 6);
+                ctx.fillRect(player.x+player.w-14, player.y+player.h-6, 10, 6);
+                ctx.shadowBlur = 0;
+
+                // очки на дороге
+                ctx.fillStyle = '#f0f0ff44';
+                ctx.font = '16px monospace';
+                ctx.fillText('HORIKITA666', W/2-70, H-20);
+            }
+
+            // -------------------- КОНЕЦ ИГРЫ --------------------
+            function endGame() {
+                if (gameOver) return;
+                gameOver = true;
+                gameActive = false;
+                finalScoreSpan.innerText = Math.floor(score);
+                bestMsgSpan.innerText = `🏅 рекорд: ${best}`;
+                gameOverOverlay.classList.remove('hidden');
+            }
+
+            // -------------------- СБРОС --------------------
+            function resetGame() {
+                gameOver = false;
+                gameActive = true;
+                score = 0;
+                speed = 2;
+                obstacles = [];
+                stars = [];
+                player.x = W/2 - 30;
+                player.y = H - 100;
+                player.lane = 1;
+                player.targetX = W/2 - 30;
+                spawnCounter = 0;
+                scoreSpan.innerText = '0';
+                speedSpan.innerText = '1.0';
+                gameOverOverlay.classList.add('hidden');
+                startOverlay.classList.add('hidden');
+            }
+
+            // -------------------- СТАРТ --------------------
+            function startGame() {
+                resetGame();
+                gameActive = true;
+                startOverlay.classList.add('hidden');
+                gameOverOverlay.classList.add('hidden');
+            }
+
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', () => {
+                resetGame();
+            });
+
+            // -------------------- ИГРОВОЙ ЦИКЛ --------------------
+            function gameLoop() {
+                update();
+                draw();
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Показываем стартовый экран
+            startOverlay.classList.remove('hidden');
+            gameActive = false;
+            gameLoop();
+
+            // Политика автозапуска музыки на сайте — если есть, пусть играет сама
+            // В этой игре музыка не добавлена, чтобы не перегружать
+        })();
+    </script>
+</body>
+</html>
