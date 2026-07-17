@@ -1,32 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NIGHT DRIVE | HORIKITA666</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>3D ГОНКА | HORIKITA666</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body {
-            background: #0a0a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
-            touch-action: none;
-            overflow: hidden;
-        }
-        canvas {
-            display: block;
-            width: 100vmin;
-            height: 100vmin;
-            max-width: 500px;
-            max-height: 700px;
-            border: 3px solid #a88aff;
-            border-radius: 20px;
-            box-shadow: 0 0 30px #a88aff44;
-            touch-action: none;
-        }
+        body { overflow: hidden; background: #0a0a1a; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
         .ui {
             position: fixed;
             top: 10px;
@@ -40,6 +21,7 @@
             font-weight: bold;
             pointer-events: none;
             z-index: 10;
+            font-family: 'Courier New', monospace;
         }
         .ui span {
             background: #00000088;
@@ -63,6 +45,7 @@
             z-index: 100;
             text-align: center;
             padding: 20px;
+            font-family: 'Courier New', monospace;
         }
         .overlay h1 { font-size: 2.5rem; color: #a88aff; text-shadow: 0 0 12px #a88aff88; }
         .overlay p { color: #ccc; font-size: 1.1rem; margin: 8px 0; }
@@ -89,15 +72,17 @@
     </style>
 </head>
 <body>
+
     <div class="ui">
         <span>🏆 <span id="scoreDisplay">0</span></span>
         <span>⚡ <span id="speedDisplay">1</span>x</span>
         <span>🏅 BEST <span id="bestDisplay">0</span></span>
     </div>
-    <canvas id="gameCanvas"></canvas>
+
+    <div id="gameContainer"></div>
 
     <div class="overlay" id="startOverlay">
-        <h1>🚗 NIGHT DRIVE</h1>
+        <h1>🚗 3D ГОНКА</h1>
         <p>левая / правая половина экрана — перестроение</p>
         <p style="font-size:0.8rem; color:#888;">избегай машин | собирай звёзды</p>
         <button class="btn" id="startBtn">▶️ СТАРТ</button>
@@ -110,272 +95,265 @@
         <button class="btn" id="restartBtn">🔄 ЗАНОВО</button>
     </div>
 
-    <script>
-        (function() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            const scoreSpan = document.getElementById('scoreDisplay');
-            const speedSpan = document.getElementById('speedDisplay');
-            const bestSpan = document.getElementById('bestDisplay');
-            const finalScoreSpan = document.getElementById('finalScore');
-            const bestMsgSpan = document.getElementById('bestMsg');
-            const startOverlay = document.getElementById('startOverlay');
-            const gameOverOverlay = document.getElementById('gameOverOverlay');
-            const startBtn = document.getElementById('startBtn');
-            const restartBtn = document.getElementById('restartBtn');
-
-            let W, H;
-            function resizeCanvas() {
-                const rect = canvas.parentElement.getBoundingClientRect();
-                const size = Math.min(rect.width, rect.height, 600);
-                W = canvas.width = size;
-                H = canvas.height = size * 1.25;
-                canvas.style.height = H + 'px';
-                canvas.style.width = W + 'px';
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.126.0/build/three.module.js"
             }
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+        }
+    </script>
 
-            // ======= ЗАГРУЗКА ТЕКСТУР =======
-            const textures = {
-                asphalt: new Image(),
-                grass: new Image(),
-                carRed: new Image(),
-                carBlue: new Image(),
-                carYellow: new Image(),
-                playerCar: new Image(),
-                star: new Image()
-            };
-            textures.asphalt.src = 'https://www.transparenttextures.com/patterns/asfalt-dark.png';
-            textures.grass.src = 'https://www.transparenttextures.com/patterns/dark-mosaic.png';
-            textures.carRed.src = 'https://cdn-icons-png.flaticon.com/512/741/741407.png';
-            textures.carBlue.src = 'https://cdn-icons-png.flaticon.com/512/741/741408.png';
-            textures.carYellow.src = 'https://cdn-icons-png.flaticon.com/512/741/741409.png';
-            textures.playerCar.src = 'https://cdn-icons-png.flaticon.com/512/3206/3206091.png';
-            textures.star.src = 'https://cdn-icons-png.flaticon.com/512/182/182866.png';
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'https://unpkg.com/three@0.126.0/examples/jsm/controls/OrbitControls.js';
 
-            let texturesLoaded = 0;
-            const totalTextures = 7;
-            function checkTextures() {
-                texturesLoaded++;
-                if (texturesLoaded >= totalTextures) {
-                    document.getElementById('startBtn').textContent = '▶️ СТАРТ';
-                    document.getElementById('startBtn').disabled = false;
-                }
+        const container = document.getElementById('gameContainer');
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+        scene.fog = new THREE.Fog(0x0a0a1a, 10, 35);
+
+        const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 100);
+        camera.position.set(0, 3, 8);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(W, H);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // Свет
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffeedd, 1);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const fillLight = new THREE.PointLight(0x4466ff, 0.5, 15);
+        fillLight.position.set(0, 3, -2);
+        scene.add(fillLight);
+
+        // Дорога
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x1a1f2e, roughness: 0.8, metalness: 0.1 });
+        const road = new THREE.Mesh(new THREE.PlaneGeometry(6, 40), roadMat);
+        road.rotation.x = -Math.PI/2;
+        road.position.z = -15;
+        road.receiveShadow = true;
+        scene.add(road);
+
+        // Разметка (полосы)
+        const lineMat = new THREE.MeshStandardMaterial({ color: 0xffcc44, emissive: 0xff8800, emissiveIntensity: 0.2 });
+        for (let i = 0; i < 20; i++) {
+            const line = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 1.2), lineMat);
+            line.rotation.x = -Math.PI/2;
+            line.position.set(-1.5 + Math.random() * 3, 0.02, -i * 2 + 2);
+            scene.add(line);
+        }
+
+        // Бордюры
+        const curbMat = new THREE.MeshStandardMaterial({ color: 0x2a2f4a });
+        for (let side of [-3.2, 3.2]) {
+            const curb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 40), curbMat);
+            curb.position.set(side, 0.15, -15);
+            scene.add(curb);
+        }
+
+        // Машина игрока
+        const carGroup = new THREE.Group();
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, metalness: 0.6, roughness: 0.4 });
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1.6), bodyMat);
+        body.position.y = 0.3;
+        body.castShadow = true;
+        carGroup.add(body);
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x4488cc, transparent: true, opacity: 0.6 });
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.6), glassMat);
+        glass.position.set(0, 0.5, -0.2);
+        carGroup.add(glass);
+        const headlightMat = new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xff8800, emissiveIntensity: 0.3 });
+        for (let x of [-0.25, 0.25]) {
+            const hl = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), headlightMat);
+            hl.position.set(x, 0.15, 0.85);
+            carGroup.add(hl);
+        }
+        carGroup.position.set(0, 0.1, 2);
+        scene.add(carGroup);
+
+        // Препятствия и звёзды
+        let obstacles = [];
+        let stars = [];
+        let score = 0;
+        let speed = 2;
+        let best = parseInt(localStorage.getItem('3dGonkaBest')) || 0;
+        document.getElementById('bestDisplay').innerText = best;
+
+        let gameActive = false;
+        let gameOver = false;
+        let roadOffset = 0;
+        let spawnCounter = 0;
+
+        function createObstacle() {
+            const colors = [0xcc3355, 0xcc8833, 0x3377cc];
+            const mat = new THREE.MeshStandardMaterial({ color: colors[Math.floor(Math.random() * 3)], metalness: 0.4, roughness: 0.6 });
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 1.4), mat);
+            mesh.position.set((Math.random() - 0.5) * 3, 0.15, -30);
+            mesh.castShadow = true;
+            scene.add(mesh);
+            obstacles.push({ mesh, z: -30, speed: 0 });
+        }
+
+        function createStar() {
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffd966, emissive: 0xff8800, emissiveIntensity: 0.5 });
+            const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.2), mat);
+            mesh.position.set((Math.random() - 0.5) * 3, 0.4, -30);
+            scene.add(mesh);
+            stars.push({ mesh, z: -30, angle: 0 });
+        }
+
+        // Управление
+        let targetLane = 0;
+        function handleTap(e) {
+            if (!gameActive) return;
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const half = window.innerWidth / 2;
+            targetLane += (clientX < half) ? -1 : 1;
+            targetLane = Math.max(-1.5, Math.min(1.5, targetLane));
+        }
+        window.addEventListener('touchstart', handleTap);
+        window.addEventListener('mousedown', handleTap);
+
+        // Старт / рестарт
+        function startGame() {
+            gameActive = true;
+            gameOver = false;
+            score = 0;
+            speed = 2;
+            obstacles.forEach(o => { scene.remove(o.mesh); });
+            stars.forEach(s => { scene.remove(s.mesh); });
+            obstacles = [];
+            stars = [];
+            targetLane = 0;
+            carGroup.position.x = 0;
+            document.getElementById('startOverlay').classList.add('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            updateUI();
+        }
+
+        function endGame() {
+            if (gameOver) return;
+            gameOver = true;
+            gameActive = false;
+            document.getElementById('finalScore').innerText = Math.floor(score);
+            document.getElementById('bestMsg').innerText = `🏅 рекорд: ${best}`;
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = Math.floor(score);
+            document.getElementById('speedDisplay').innerText = speed.toFixed(1);
+            if (Math.floor(score) > best) {
+                best = Math.floor(score);
+                localStorage.setItem('3dGonkaBest', best);
+                document.getElementById('bestDisplay').innerText = best;
             }
-            for (let key in textures) {
-                textures[key].onload = checkTextures;
-                textures[key].onerror = checkTextures;
-            }
+        }
 
-            // ======= ИГРОВЫЕ ПЕРЕМЕННЫЕ =======
-            let gameActive = false, gameOver = false;
-            let score = 0, speed = 2, best = localStorage.getItem('nightDriveBest') ? parseInt(localStorage.getItem('nightDriveBest')) : 0;
-            bestSpan.innerText = best;
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
 
-            const player = { x: W/2 - 30, y: H - 150, w: 60, h: 90, lane: 1, targetX: W/2 - 30 };
-            let obstacles = [], stars = [], rain = [], trees = [];
-            let roadOffset = 0, spawnCounter = 0;
-            for (let i=0; i<180; i++) rain.push({ x: Math.random()*W, y: Math.random()*H, len: 12+Math.random()*18, speed: 5+Math.random()*9 });
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
 
-            // ======= УПРАВЛЕНИЕ =======
-            function handleTap(e) {
-                if (!gameActive) return;
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const canvasX = clientX - rect.left;
-                if (canvasX < rect.width/2) {
-                    if (player.lane > 0) { player.lane--; player.targetX = player.lane * 180 + 50; }
-                } else {
-                    if (player.lane < 2) { player.lane++; player.targetX = player.lane * 180 + 50; }
-                }
-            }
-            canvas.addEventListener('touchstart', handleTap);
-            canvas.addEventListener('mousedown', handleTap);
+            if (gameActive) {
+                speed = 2 + Math.floor(score / 100) * 0.5;
+                if (speed > 8) speed = 8;
 
-            // ======= СПАВН =======
-            function spawnObstacle() {
-                const lane = Math.floor(Math.random() * 3);
-                const x = lane * 180 + 50;
-                const colors = [textures.carRed, textures.carBlue, textures.carYellow];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                obstacles.push({ x, y: -100, w: 50, h: 80, lane, img: color });
-            }
+                // Движение машины
+                carGroup.position.x += (targetLane - carGroup.position.x) * 0.08;
 
-            function spawnStar() {
-                const lane = Math.floor(Math.random() * 3);
-                const x = lane * 180 + 50;
-                stars.push({ x: x + 15, y: -30, r: 20 });
-            }
-
-            // ======= ОБНОВЛЕНИЕ =======
-            function update() {
-                if (!gameActive) return;
-                player.x += (player.targetX - player.x) * 0.12;
-                speed = 2 + Math.floor(score / 180) * 0.7;
-                if (speed > 10) speed = 10;
-                speedSpan.innerText = speed.toFixed(1);
-                roadOffset = (roadOffset + speed) % 40;
+                // Спавн
                 spawnCounter++;
-                let spawnRate = Math.max(15, 45 - Math.floor(speed * 3));
+                const spawnRate = Math.max(15, 45 - speed * 3);
                 if (spawnCounter > spawnRate) {
                     spawnCounter = 0;
-                    if (Math.random() < 0.55) spawnObstacle();
-                    if (Math.random() < 0.3) spawnStar();
+                    if (Math.random() < 0.55) createObstacle();
+                    if (Math.random() < 0.3) createStar();
                 }
 
-                for (let i=obstacles.length-1; i>=0; i--) {
+                // Движение препятствий
+                for (let i = obstacles.length - 1; i >= 0; i--) {
                     const o = obstacles[i];
-                    o.y += speed;
-                    if (o.y > H + 60) { obstacles.splice(i,1); continue; }
-                    if (o.x + o.w > player.x && o.x < player.x + player.w &&
-                        o.y + o.h > player.y && o.y < player.y + player.h) {
-                        endGame(); return;
+                    o.z += speed * 0.1;
+                    o.mesh.position.z = o.z;
+                    if (o.z > 5) {
+                        scene.remove(o.mesh);
+                        obstacles.splice(i, 1);
+                        continue;
+                    }
+                    // Столкновение
+                    if (Math.abs(o.mesh.position.x - carGroup.position.x) < 0.8 && o.z > 1.5 && o.z < 2.5) {
+                        endGame();
                     }
                 }
 
-                for (let i=stars.length-1; i>=0; i--) {
+                // Движение звёзд
+                for (let i = stars.length - 1; i >= 0; i--) {
                     const s = stars[i];
-                    s.y += speed;
-                    if (s.y > H + 60) { stars.splice(i,1); continue; }
-                    const dx = (player.x + player.w/2) - s.x;
-                    const dy = (player.y + player.h/2) - s.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < s.r + 25) {
+                    s.z += speed * 0.1;
+                    s.mesh.position.z = s.z;
+                    s.mesh.rotation.y += 0.05;
+                    if (s.z > 5) {
+                        scene.remove(s.mesh);
+                        stars.splice(i, 1);
+                        continue;
+                    }
+                    // Сбор звезды
+                    if (Math.abs(s.mesh.position.x - carGroup.position.x) < 0.6 && s.z > 1.5 && s.z < 2.5) {
                         score += 15;
-                        scoreSpan.innerText = score;
-                        stars.splice(i,1);
-                        if (score > best) { best = score; localStorage.setItem('nightDriveBest', best); bestSpan.innerText = best; }
+                        scene.remove(s.mesh);
+                        stars.splice(i, 1);
+                        updateUI();
+                        if (Math.floor(score) > best) {
+                            best = Math.floor(score);
+                            localStorage.setItem('3dGonkaBest', best);
+                            document.getElementById('bestDisplay').innerText = best;
+                        }
                     }
                 }
 
-                score += 0.6;
-                scoreSpan.innerText = Math.floor(score);
-                if (Math.floor(score) > best) {
-                    best = Math.floor(score);
-                    localStorage.setItem('nightDriveBest', best);
-                    bestSpan.innerText = best;
-                }
-
-                for (let r of rain) {
-                    r.y += r.speed;
-                    if (r.y > H) { r.y = -20; r.x = Math.random() * W; }
-                }
+                score += 0.5;
+                updateUI();
             }
 
-            // ======= ОТРИСОВКА =======
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-                ctx.fillStyle = '#0a0a1a';
-                ctx.fillRect(0, 0, W, H);
+            // Камера следит за машиной
+            camera.position.x = carGroup.position.x * 0.8;
+            camera.lookAt(carGroup.position.x * 0.4, 0, -2);
 
-                // дорога с текстурой асфальта
-                const patAsphalt = ctx.createPattern(textures.asphalt, 'repeat');
-                ctx.fillStyle = patAsphalt;
-                ctx.beginPath();
-                ctx.moveTo(40, H);
-                ctx.lineTo(W/2 - 80, H * 0.45);
-                ctx.lineTo(W/2 + 80, H * 0.45);
-                ctx.lineTo(W-40, H);
-                ctx.closePath();
-                ctx.fill();
+            renderer.render(scene, camera);
+        }
 
-                // трава (обочина)
-                const patGrass = ctx.createPattern(textures.grass, 'repeat');
-                ctx.fillStyle = patGrass;
-                ctx.fillRect(0, 0, 40, H);
-                ctx.fillRect(W-40, 0, 40, H);
+        // Адаптация размера
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
 
-                // разметка
-                ctx.strokeStyle = '#ffcc44';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([25, 30]);
-                ctx.lineDashOffset = -roadOffset * 2;
-                for (let i = 1; i < 3; i++) {
-                    const x1 = 40 + i * (W-80)/3;
-                    const x2 = W/2 - 80 + i * 160/3;
-                    ctx.beginPath();
-                    ctx.moveTo(x1, H);
-                    ctx.lineTo(x2, H * 0.45);
-                    ctx.stroke();
-                }
-                ctx.setLineDash([]);
+        animate();
 
-                // звёзды (текстура)
-                for (let s of stars) {
-                    ctx.drawImage(textures.star, s.x - s.r, s.y - s.r, s.r*2, s.r*2);
-                }
-
-                // препятствия
-                for (let o of obstacles) {
-                    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
-                }
-
-                // машина игрока
-                ctx.drawImage(textures.playerCar, player.x, player.y, player.w, player.h);
-
-                // дождь
-                ctx.strokeStyle = '#8aa8ff44';
-                ctx.lineWidth = 1.5;
-                for (let r of rain) {
-                    ctx.beginPath();
-                    ctx.moveTo(r.x, r.y);
-                    ctx.lineTo(r.x - 4, r.y + r.len);
-                    ctx.stroke();
-                }
-            }
-
-            // ======= КОНЕЦ ИГРЫ =======
-            function endGame() {
-                if (gameOver) return;
-                gameOver = true;
-                gameActive = false;
-                finalScoreSpan.innerText = Math.floor(score);
-                bestMsgSpan.innerText = `🏅 рекорд: ${best}`;
-                gameOverOverlay.classList.remove('hidden');
-            }
-
-            // ======= СБРОС =======
-            function resetGame() {
-                gameOver = false;
-                gameActive = true;
-                score = 0;
-                speed = 2;
-                obstacles = [];
-                stars = [];
-                player.x = W/2 - 30;
-                player.y = H - 150;
-                player.lane = 1;
-                player.targetX = W/2 - 30;
-                spawnCounter = 0;
-                scoreSpan.innerText = '0';
-                speedSpan.innerText = '1.0';
-                gameOverOverlay.classList.add('hidden');
-                startOverlay.classList.add('hidden');
-            }
-
-            // ======= СТАРТ =======
-            function startGame() {
-                resetGame();
-                gameActive = true;
-                startOverlay.classList.add('hidden');
-                gameOverOverlay.classList.add('hidden');
-            }
-
-            startBtn.addEventListener('click', startGame);
-            restartBtn.addEventListener('click', resetGame);
-
-            // ======= ЦИКЛ =======
-            function gameLoop() {
-                update();
-                draw();
-                requestAnimationFrame(gameLoop);
-            }
-
-            startOverlay.classList.remove('hidden');
-            gameActive = false;
-            gameLoop();
-        })();
+        // Небольшие огни по краям
+        for (let i = 0; i < 20; i++) {
+            const lightMat = new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff4400, emissiveIntensity: 0.3 });
+            const light = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), lightMat);
+            light.position.set(-3 + (i % 2) * 6, 0.5, -i * 2 + 2);
+            scene.add(light);
+        }
     </script>
 </body>
-        </html>
+</html>
